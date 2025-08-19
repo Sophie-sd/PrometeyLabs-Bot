@@ -64,8 +64,7 @@ async def handle_order_services(query, context, callback_data):
 ⏱️ **Термін:** до 10 днів
 
 🔗 **Зв'яжіться з менеджером:**
-• [Telegram](https://t.me/PrometeyLabs)
-• Email: info@prometeylabs.com
+• [💬 Telegram](https://t.me/PrometeyLabs)
             """,
             "buttons": [
                 [InlineKeyboardButton("🔙 Назад до послуг", callback_data="services_menu")],
@@ -91,11 +90,9 @@ async def handle_order_services(query, context, callback_data):
 • Звітність та аналітика
 
 💰 **Ціна:** від $200
-⏱️ **Термін:** 3-5 днів
 
 🔗 **Зв'яжіться з менеджером:**
-• [Telegram](https://t.me/PrometeyLabs)
-• Email: info@prometeylabs.com
+• [💬 Telegram](https://t.me/PrometeyLabs)
             """,
             "buttons": [
                 [InlineKeyboardButton("🔙 Назад до послуг", callback_data="services_menu")],
@@ -105,27 +102,30 @@ async def handle_order_services(query, context, callback_data):
         "order_video": {
             "title": "🎬 Генерація AI-відео",
             "description": """
-🎬 **Створення AI-відео з озвученням**
+🎬 **AI-ВІДЕО - ВІДЕО НОВОГО ПОКОЛІННЯ**
 
-✅ **Можливості:**
-• Генерація будь-якої локації
-• Використання ваших образів
-• Професійне озвучення
-• Монтаж та пост-обробка
-• Різні формати (вертикальне, горизонтальне)
+✅ **Створення роликів на Veo 3 та інших AI-платформах:**
+• Будь-які формати: від рекламних до презентаційних
+• Сучасна графіка, спецефекти та стиль
+• Контент, який привертає увагу
+
+✅ **Технології:**
+• Veo 3 - найновіша AI-платформа від Google
+• Stable Video Diffusion
+• Runway ML та інші передові рішення
 
 ✅ **Застосування:**
 • Рекламні ролики
-• Презентації
+• Презентації продуктів
 • Соціальні мережі
 • YouTube контент
+• Корпоративні відео
 
 💰 **Ціна:** від $150
 ⏱️ **Термін:** 2-4 дні
 
 🔗 **Зв'яжіться з менеджером:**
-• [Telegram](https://t.me/PrometeyLabs)
-• Email: info@prometeylabs.com
+• [💬 Telegram](https://t.me/PrometeyLabs)
             """,
             "buttons": [
                 [InlineKeyboardButton("🔙 Назад до послуг", callback_data="services_menu")],
@@ -156,8 +156,7 @@ async def handle_order_services(query, context, callback_data):
 ⏱️ **Термін:** постійно
 
 🔗 **Зв'яжіться з менеджером:**
-• [Telegram](https://t.me/PrometeyLabs)
-• Email: info@prometeylabs.com
+• [💬 Telegram](https://t.me/PrometeyLabs)
             """,
             "buttons": [
                 [InlineKeyboardButton("🔙 Назад до послуг", callback_data="services_menu")],
@@ -186,8 +185,7 @@ async def handle_order_services(query, context, callback_data):
 ⏱️ **Термін:** за індивідуальним планом
 
 🔗 **Зв'яжіться з менеджером:**
-• [Telegram](https://t.me/PrometeyLabs)
-• Email: info@prometeylabs.com
+• [💬 Telegram](https://t.me/PrometeyLabs)
             """,
             "buttons": [
                 [InlineKeyboardButton("🔙 Назад", callback_data="back_to_menu")]
@@ -259,7 +257,7 @@ async def handle_client_actions(query, context, callback_data):
 📞 **Підтримка PrometeyLabs**
 
 🔗 **Зв'яжіться з нами:**
-• [Telegram](https://t.me/PrometeyLabs) - консультації, менеджер компанії
+• [💬 Telegram](https://t.me/PrometeyLabs) - консультації, менеджер компанії
 • [✈️ Telegram-канал](t.me/prometeylabs_channel)
 • [📸 Instagram](@prometeylabs)
 • [🌐 Сайт](prometeylabs.com)
