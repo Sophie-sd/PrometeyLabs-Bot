@@ -18,6 +18,8 @@ def get_services_menu_keyboard():
         [InlineKeyboardButton("📢 Запустити рекламу", callback_data="order_ads")],
         [InlineKeyboardButton("🎬 Генерація AI-відео", callback_data="order_video")],
         [InlineKeyboardButton("📱 Ведення соціальних мереж", callback_data="order_social")],
+        [InlineKeyboardButton("🤖 AI-аватари", callback_data="order_avatars")],
+        [InlineKeyboardButton("🤖 Telegram-боти", callback_data="order_bots")],
         [InlineKeyboardButton("🔙 Назад", callback_data="back_to_menu")]
     ]
 
@@ -69,6 +71,10 @@ def get_services_menu_text():
 🎬 **Генерація AI-відео** - Створення роликів на Veo 3 та інших AI-платформах
 
 📱 **Ведення соціальних мереж** - Комплексне ведення соцмереж
+
+🤖 **AI-аватари** - Ваш віртуальний образ, що працює за вас
+
+🤖 **Telegram-боти** - Автоматизований помічник для бізнесу
 
 Оберіть потрібну послугу:
     """
