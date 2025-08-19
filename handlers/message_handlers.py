@@ -1,0 +1,95 @@
+"""
+Обробники повідомлень для PrometeyLabs Telegram Bot
+"""
+from telegram import Update
+from telegram.ext import ContextTypes, MessageHandler, filters
+import logging
+
+logger = logging.getLogger(__name__)
+
+async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Обробник текстових повідомлень"""
+    user = update.effective_user
+    message_text = update.message.text.lower()
+    
+    logger.info(f"Отримано повідомлення від {user.id}: {message_text}")
+    
+    # Простий аналіз повідомлення
+    if any(word in message_text for word in ['привіт', 'вітаю', 'hello', 'hi']):
+        response = f"Привіт, {user.first_name}! 👋 Радий вас бачити!"
+    elif any(word in message_text for word in ['як справи', 'як дела', 'how are you']):
+        response = "Дякую, у мене все добре! 😊 А у вас як справи?"
+    elif any(word in message_text for word in ['допомога', 'help', 'підтримка']):
+        response = "Звичайно! Напишіть /help для отримання списку доступних команд."
+    elif any(word in message_text for word in ['ціни', 'прайс', 'prices', 'cost']):
+        response = "Для отримання інформації про ціни наших послуг, будь ласка, зверніться до нас:\n📧 info@prometeylabs.com"
+    elif any(word in message_text for word in ['проект', 'project', 'розробка', 'development']):
+        response = "Ми спеціалізуємося на розробці веб та мобільних додатків! Напишіть /about для детальної інформації."
+    elif any(word in message_text for word in ['сайт', 'website', 'веб-сайт']):
+        response = "💻 Ми створюємо унікальні сайти під ключ за $300-700! Напишіть /start для замовлення."
+    elif any(word in message_text for word in ['реклама', 'ads', 'маркетинг']):
+        response = "📢 Налаштовуємо рекламу на Facebook, Google, TikTok! Напишіть /start для деталей."
+    elif any(word in message_text for word in ['відео', 'video', 'ai']):
+        response = "🎬 Створюємо AI-відео з озвученням! Напишіть /start для замовлення."
+    elif any(word in message_text for word in ['соцмережі', 'instagram', 'facebook']):
+        response = "📱 Ведемо соціальні мережі комплексно! Напишіть /start для деталей."
+    elif any(word in message_text for word in ['навчання', 'курси', 'уроки']):
+        response = "🎓 Проводимо курси з IT, маркетингу та AI! Напишіть /start для інформації."
+    else:
+        response = f"Дякую за ваше повідомлення, {user.first_name}! 🤖\n\nЯкщо у вас є питання про наші послуги, напишіть /start для перегляду меню."
+    
+    await update.message.reply_text(response)
+    logger.info(f"Відправлено відповідь користувачу {user.id}")
+
+async def handle_photo_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Обробник фото повідомлень"""
+    user = update.effective_user
+    
+    response = f"Дякую за фото, {user.first_name}! 📸\n\nНа жаль, я поки що не можу аналізувати зображення. Спробуйте написати текст або використати команди."
+    
+    await update.message.reply_text(response)
+    logger.info(f"Отримано фото від користувача {user.id}")
+
+async def handle_document_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Обробник документів"""
+    user = update.effective_user
+    document = update.message.document
+    
+    response = f"Дякую за документ '{document.file_name}', {user.first_name}! 📄\n\nНа жаль, я поки що не можу обробляти документи. Спробуйте написати текст або використати команди."
+    
+    await update.message.reply_text(response)
+    logger.info(f"Отримано документ від користувача {user.id}: {document.file_name}")
+
+async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Обробник голосових повідомлень"""
+    user = update.effective_user
+    
+    response = f"Дякую за голосове повідомлення, {user.first_name}! 🎤\n\nНа жаль, я поки що не можу розпізнавати мову. Спробуйте написати текст або використати команди."
+    
+    await update.message.reply_text(response)
+    logger.info(f"Отримано голосове повідомлення від користувача {user.id}")
+
+def setup_message_handlers(application):
+    """Налаштування обробників повідомлень"""
+    # Обробники різних типів повідомлень
+    application.add_handler(MessageHandler(
+        filters.TEXT & ~filters.COMMAND,
+        handle_text_message
+    ))
+    
+    application.add_handler(MessageHandler(
+        filters.PHOTO,
+        handle_photo_message
+    ))
+    
+    application.add_handler(MessageHandler(
+        filters.Document.ALL,
+        handle_document_message
+    ))
+    
+    application.add_handler(MessageHandler(
+        filters.VOICE,
+        handle_voice_message
+    ))
+    
+    logger.info("Обробники повідомлень налаштовані")
