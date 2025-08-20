@@ -12,8 +12,9 @@ def setup_logging():
         level=getattr(logging, LOG_LEVEL.upper()),
         format=LOG_FORMAT,
         handlers=[
-            logging.StreamHandler(sys.stdout),
-            logging.FileHandler('bot.log', encoding='utf-8')
+            logging.StreamHandler(sys.stdout)
+            # Файлове логування тільки для локальної розробки
+            # logging.FileHandler('bot.log', encoding='utf-8')
         ]
     )
     

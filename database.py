@@ -81,17 +81,20 @@ class Payment(Base):
     user = relationship("User", back_populates="payments")
 
 # Створення двигуна та сесії
-# Підтримка як SQLite, так і PostgreSQL
+# Підтримка PostgreSQL (основний) та SQLite (fallback)
 if config.DATABASE_URL.startswith('postgresql'):
-    # Для PostgreSQL додаємо echo=False та pool_pre_ping=True
+    # Для PostgreSQL додаємо оптимізації
     engine = create_engine(
         config.DATABASE_URL,
         echo=False,
         pool_pre_ping=True,
-        pool_recycle=300
+        pool_recycle=300,
+        pool_size=10,
+        max_overflow=20
     )
 else:
-    # Для SQLite
+    # Для SQLite (тільки для розробки)
+    print("⚠️  Використовується SQLite - рекомендується PostgreSQL для production")
     engine = create_engine(config.DATABASE_URL)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

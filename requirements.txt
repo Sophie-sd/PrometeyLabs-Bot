@@ -1,12 +1,19 @@
+# Core dependencies
 python-telegram-bot==20.7
 python-dotenv==1.0.0
+flask==2.3.3
+gunicorn==21.2.0
+requests==2.31.0
+
+# Database
+sqlalchemy==2.0.23
+psycopg2-binary==2.9.7
+
+# Google integration
 google-auth==2.23.4
 google-auth-oauthlib==1.1.0
 google-auth-httplib2==0.1.1
 google-api-python-client==2.108.0
-sqlalchemy==2.0.23
-aiosqlite==0.19.0
-flask==2.3.3
-gunicorn==21.2.0
-psycopg2-binary==2.9.7
-requests==2.31.0
+
+# Keep-alive
+schedule==1.2.0

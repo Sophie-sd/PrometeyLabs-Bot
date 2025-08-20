@@ -28,3 +28,9 @@ DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///bot_database.db')
 # Перевірка наявності токена
 if not BOT_TOKEN:
     raise ValueError("BOT_TOKEN не знайдено в змінних середовища!")
+
+# Перевірка наявності Google Sheets налаштувань
+if not GOOGLE_SHEETS_CREDENTIALS:
+    print("⚠️  GOOGLE_SHEETS_CREDENTIALS не налаштовано - Google Sheets функції будуть недоступні")
+if not GOOGLE_SHEETS_ID:
+    print("⚠️  GOOGLE_SHEETS_ID не налаштовано - Google Sheets функції будуть недоступні")

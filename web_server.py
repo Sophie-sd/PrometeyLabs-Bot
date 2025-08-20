@@ -46,21 +46,41 @@ def create_bot():
 @app.route('/')
 def health_check():
     """Перевірка здоров'я сервісу для Render"""
+    bot_status = "initialized" if bot_application else "not_initialized"
+    
     return jsonify({
         "status": "healthy",
         "service": "PrometeyLabs Telegram Bot",
-        "version": "1.0.0"
+        "version": "1.0.0",
+        "bot_status": bot_status,
+        "timestamp": __import__('datetime').datetime.now().isoformat()
+    })
+
+@app.route('/ping')
+def ping():
+    """Keep-alive endpoint для Render free tier"""
+    return jsonify({
+        "pong": True,
+        "timestamp": __import__('datetime').datetime.now().isoformat(),
+        "bot_status": "initialized" if bot_application else "not_initialized"
     })
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
     """Обробка веб-хуків від Telegram"""
     if bot_application is None:
+        logger.error("Webhook викликано, але бот не ініціалізований")
         return jsonify({"error": "Bot not initialized"}), 500
     
     try:
         # Отримуємо дані від Telegram
         update_data = request.get_json()
+        
+        if not update_data:
+            logger.warning("Webhook отримано порожні дані")
+            return jsonify({"error": "Empty data"}), 400
+        
+        logger.info(f"Webhook отримано: {update_data.get('update_id', 'unknown')}")
         
         # Створюємо Update об'єкт та обробляємо його
         from telegram import Update
@@ -69,10 +89,11 @@ def webhook():
         # Обробляємо оновлення
         bot_application.process_update(update)
         
-        return jsonify({"status": "ok"})
+        logger.info(f"Webhook оброблено успішно: {update.update_id}")
+        return jsonify({"status": "ok", "update_id": update.update_id})
         
     except Exception as e:
-        logger.error(f"Помилка в webhook: {e}")
+        logger.error(f"Помилка в webhook: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
 @app.route('/set_webhook', methods=['GET'])

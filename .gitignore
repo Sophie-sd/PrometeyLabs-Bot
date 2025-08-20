@@ -55,6 +55,7 @@ token.json
 *.swp
 *.swo
 *~
+.cursor/
 
 # OS
 .DS_Store
@@ -67,3 +68,13 @@ Thumbs.db
 
 # Telegram bot
 bot_database.db
+
+# Test files
+test_*.py
+*_test.py
+
+# Debug files
+debug_*.py
+
+# Keep-alive logs
+keep_alive.log
