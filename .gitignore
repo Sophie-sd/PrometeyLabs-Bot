@@ -35,9 +35,19 @@ venv.bak/
 .env.test.local
 .env.production.local
 
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
 # Logs
 *.log
 logs/
+
+# Google credentials
+credentials.json
+token.json
+*.json
 
 # IDE
 .vscode/
@@ -55,6 +65,5 @@ logs/
 ehthumbs.db
 Thumbs.db
 
-# Telegram Bot specific
-webhook_info.json
-bot.log
+# Telegram bot
+bot_database.db

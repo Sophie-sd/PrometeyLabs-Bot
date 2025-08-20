@@ -12,10 +12,11 @@ git push -u origin main
 ```
 
 ### 2. Перевірте наявність всіх файлів:
-- ✅ `main.py` - головний файл бота
+- ✅ `main.py` - головний файл бота (локальний запуск)
+- ✅ `web_server.py` - веб-сервер для Render
 - ✅ `requirements.txt` - залежності Python
 - ✅ `render.yaml` - конфігурація для Render
-- ✅ `.env.example` - приклад змінних середовища
+- ✅ `Procfile` - конфігурація для Render
 - ✅ `.gitignore` - ігнорування конфіденційних файлів
 
 ## 🌐 Деплой на Render.com
@@ -41,7 +42,7 @@ Root Directory: (залиште порожнім)
 ### Крок 4: Build & Deploy налаштування
 ```
 Build Command: pip install -r requirements.txt
-Start Command: python main.py
+Start Command: gunicorn web_server:app --bind 0.0.0.0:$PORT --workers 1 --timeout 120
 ```
 
 ### Крок 5: Змінні середовища
@@ -65,7 +66,8 @@ Start Command: python main.py
 ### 1. Логи сервісу
 - Перейдіть в розділ **"Logs"**
 - Перевірте чи немає помилок
-- Має бути повідомлення: "Бот PrometeyLabs Bot запущений успішно!"
+- Має бути повідомлення: "Бот PrometeyLabs Bot створений успішно!"
+- Перевірте доступність веб-сервера: `https://your-app.onrender.com/`
 
 ### 2. Тестування бота
 - Відправте `/start` вашому боту
@@ -99,44 +101,31 @@ pip freeze > requirements.txt
 - Переконайтесь що токен правильний
 - Перевірте чи не заблокований бот
 
-## 📱 Налаштування Telegram Webhook (опціонально)
+## 📱 Налаштування Telegram Webhook
 
-Якщо потрібен webhook замість polling:
+Після успішного деплою налаштуйте веб-хук:
 
-### 1. Отримайте URL вашого сервісу
+### 1. Перевірте доступність сервісу
 ```
-https://your-service-name.onrender.com
-```
-
-### 2. Встановіть webhook
-```python
-# В main.py замініть run_polling() на:
-application.run_webhook(
-    listen="0.0.0.0",
-    port=int(os.environ.get("PORT", 8080)),
-    webhook_url="https://your-service-name.onrender.com"
-)
+https://your-app-name.onrender.com/
 ```
 
-### 3. Оновіть render.yaml
-```yaml
-services:
-  - type: web
-    name: prometeylabs-telegram-bot
-    env: python
-    plan: free
-    buildCommand: pip install -r requirements.txt
-    startCommand: python main.py
-    envVars:
-      - key: BOT_TOKEN
-        sync: false
-      - key: LOG_LEVEL
-        value: INFO
-      - key: PYTHON_VERSION
-        value: 3.9.16
-    # Додайте для webhook:
-    healthCheckPath: /
+### 2. Встановіть веб-хук
 ```
+https://your-app-name.onrender.com/set_webhook?url=https://your-app-name.onrender.com
+```
+
+### 3. Перевірте статус бота
+```
+https://your-app-name.onrender.com/bot_info
+```
+
+### 4. Видаліть веб-хук (якщо потрібно)
+```
+https://your-app-name.onrender.com/delete_webhook
+```
+
+**Примітка:** Веб-хук автоматично налаштовується при деплої через `web_server.py`
 
 ## 🔄 Автоматичні оновлення
 

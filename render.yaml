@@ -4,7 +4,7 @@ services:
     env: python
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: python main.py
+    startCommand: gunicorn web_server:app --bind 0.0.0.0:$PORT --workers 1 --timeout 120
     envVars:
       - key: BOT_TOKEN
         sync: false
@@ -12,3 +12,11 @@ services:
         value: INFO
       - key: PYTHON_VERSION
         value: 3.9.16
+      - key: DATABASE_URL
+        value: postgresql://postgres:postgres@localhost:5432/prometeylabs_bot
+      - key: GOOGLE_SHEETS_CREDENTIALS
+        sync: false
+      - key: GOOGLE_SHEETS_ID
+        sync: false
+    healthCheckPath: /
+    autoDeploy: true

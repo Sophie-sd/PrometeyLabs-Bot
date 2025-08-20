@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Токен бота
-BOT_TOKEN = os.getenv('BOT_TOKEN', '8489681074:AAFI3mtsmJajnz2mK2Lcd_JB__YQmev28EI')
+BOT_TOKEN = os.getenv('BOT_TOKEN')
 
 # Налаштування бота
 BOT_NAME = "PrometeyLabs Bot"

@@ -22,8 +22,8 @@ class User(Base):
     email = Column(String(100))
     is_client = Column(Boolean, default=False)
     is_admin = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.utcnow())
+    updated_at = Column(DateTime, default=datetime.utcnow(), onupdate=datetime.utcnow())
     
     # Зв'язки
     projects = relationship("Project", back_populates="user")
@@ -43,7 +43,7 @@ class Project(Base):
     price = Column(Integer)  # ціна в доларах
     start_date = Column(DateTime)
     end_date = Column(DateTime)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.utcnow())
     
     # Зв'язки
     user = relationship("User", back_populates="projects")
@@ -58,7 +58,7 @@ class Task(Base):
     title = Column(String(200), nullable=False)
     description = Column(Text)
     status = Column(String(50), default='pending')  # pending, in_progress, completed
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.utcnow())
     completed_at = Column(DateTime)
     
     # Зв'язки
@@ -75,13 +75,25 @@ class Payment(Base):
     currency = Column(String(10), default='USD')
     status = Column(String(50), default='pending')  # pending, completed, failed
     payment_method = Column(String(100))
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.utcnow())
     
     # Зв'язки
     user = relationship("User", back_populates="payments")
 
 # Створення двигуна та сесії
-engine = create_engine(config.DATABASE_URL)
+# Підтримка як SQLite, так і PostgreSQL
+if config.DATABASE_URL.startswith('postgresql'):
+    # Для PostgreSQL додаємо echo=False та pool_pre_ping=True
+    engine = create_engine(
+        config.DATABASE_URL,
+        echo=False,
+        pool_pre_ping=True,
+        pool_recycle=300
+    )
+else:
+    # Для SQLite
+    engine = create_engine(config.DATABASE_URL)
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def create_tables():
