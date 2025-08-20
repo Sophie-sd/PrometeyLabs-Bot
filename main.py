@@ -15,7 +15,15 @@ logger = setup_logging()
 
 async def error_handler(update, context):
     """Обробник помилок"""
-    logger.error(f"Помилка при обробці оновлення {update}: {context.error}")
+    try:
+        if update and update.effective_user:
+            user_id = update.effective_user.id
+            username = update.effective_user.username or "Unknown"
+            logger.error(f"Помилка при обробці оновлення від користувача {user_id} (@{username}): {context.error}")
+        else:
+            logger.error(f"Помилка при обробці оновлення: {context.error}")
+    except Exception as e:
+        logger.error(f"Помилка в error_handler: {e}")
 
 def main():
     """Головна функція бота"""

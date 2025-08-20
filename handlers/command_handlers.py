@@ -9,7 +9,8 @@ from database import SessionLocal, User, Project, Payment
 from google_sheets import get_client_projects, get_client_payments, get_client_statistics
 from .menu_utils import (
     get_main_menu_keyboard, get_client_menu_keyboard, get_admin_menu_keyboard,
-    get_main_menu_text, get_client_menu_text, get_admin_menu_text
+    get_main_menu_text, get_client_menu_text, get_admin_menu_text,
+    show_menu_for_user, show_new_client_menu, show_client_menu, show_admin_menu
 )
 
 logger = logging.getLogger(__name__)
@@ -36,12 +37,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
             logger.info(f"Створено нового користувача: {user.id}")
         
         # Показуємо головне меню
-        if db_user.is_client:
-            await show_client_menu(update, context, db_user)
-        elif db_user.is_admin:
-            await show_admin_menu(update, context, db_user)
-        else:
-            await show_new_client_menu(update, context, db_user)
+        await show_menu_for_user(db_user, update, is_callback=False)
             
     except Exception as e:
         logger.error(f"Помилка в start_command: {e}")
@@ -49,29 +45,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     finally:
         db.close()
 
-async def show_new_client_menu(update: Update, context: ContextTypes.DEFAULT_TYPE, user):
-    """Показ меню для нових клієнтів"""
-    keyboard = get_main_menu_keyboard()
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    welcome_text = get_main_menu_text(user.first_name)
-    
-    await update.message.reply_text(welcome_text, reply_markup=reply_markup, parse_mode=ParseMode.MARKDOWN)
-
-async def show_client_menu(update: Update, context: ContextTypes.DEFAULT_TYPE, user):
-    """Показ меню для постійних клієнтів"""
-    keyboard = get_client_menu_keyboard()
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    welcome_text = get_client_menu_text(user.first_name)
-    
-    await update.message.reply_text(welcome_text, reply_markup=reply_markup, parse_mode=ParseMode.MARKDOWN)
-
-async def show_admin_menu(update: Update, context: ContextTypes.DEFAULT_TYPE, user):
-    """Показ меню для адміністраторів"""
-    keyboard = get_admin_menu_keyboard()
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    welcome_text = get_admin_menu_text(user.first_name)
-    
-    await update.message.reply_text(welcome_text, reply_markup=reply_markup, parse_mode=ParseMode.MARKDOWN)
+# Функції показу меню тепер винесені в menu_utils.py для уникнення дублювання
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Обробник команди /help"""

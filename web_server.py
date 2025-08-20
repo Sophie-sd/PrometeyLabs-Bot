@@ -40,7 +40,7 @@ def create_bot():
         return True
         
     except Exception as e:
-        logger.error(f"Помилка при створенні бота: {e}")
+        logger.error(f"Помилка при створенні бота: {e}", exc_info=True)
         return False
 
 @app.route('/')

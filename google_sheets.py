@@ -20,22 +20,44 @@ def get_google_sheets_service():
     """Отримання сервісу Google Sheets"""
     creds = None
     
+    # Перевіряємо наявність креденшлів
+    if not config.GOOGLE_SHEETS_CREDENTIALS:
+        logger.warning("GOOGLE_SHEETS_CREDENTIALS не налаштовано")
+        return None
+    
     # Файл token.json зберігає токени доступу користувача
     if os.path.exists('token.json'):
-        creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+        try:
+            creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+        except Exception as e:
+            logger.error(f"Помилка завантаження token.json: {e}")
+            creds = None
     
     # Якщо немає валідних креденшлів, запитуємо користувача авторизуватися
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                'credentials.json', SCOPES)
-            creds = flow.run_local_server(port=0)
+            try:
+                creds.refresh(Request())
+            except Exception as e:
+                logger.error(f"Помилка оновлення токену: {e}")
+                creds = None
         
-        # Зберігаємо креденшлі для наступного запуску
-        with open('token.json', 'w') as token:
-            token.write(creds.to_json())
+        if not creds:
+            try:
+                if os.path.exists('credentials.json'):
+                    flow = InstalledAppFlow.from_client_secrets_file(
+                        'credentials.json', SCOPES)
+                    creds = flow.run_local_server(port=0)
+                    
+                    # Зберігаємо креденшлі для наступного запуску
+                    with open('token.json', 'w') as token:
+                        token.write(creds.to_json())
+                else:
+                    logger.error("credentials.json не знайдено")
+                    return None
+            except Exception as e:
+                logger.error(f"Помилка авторизації: {e}")
+                return None
     
     try:
         service = build('sheets', 'v4', credentials=creds)

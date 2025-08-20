@@ -17,3 +17,8 @@ google-api-python-client==2.108.0
 
 # Keep-alive
 schedule==1.2.0
+
+# Development dependencies (optional)
+# pytest==7.4.0
+# black==23.7.0
+# flake8==6.0.0

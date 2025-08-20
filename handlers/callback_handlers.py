@@ -9,7 +9,8 @@ from database import SessionLocal, User, Project, Payment
 from google_sheets import get_client_projects, get_client_payments, get_client_statistics
 from .menu_utils import (
     get_main_menu_keyboard, get_services_menu_keyboard, get_client_menu_keyboard, get_admin_menu_keyboard,
-    get_main_menu_text, get_services_menu_text, get_client_menu_text, get_admin_menu_text
+    get_main_menu_text, get_services_menu_text, get_client_menu_text, get_admin_menu_text,
+    show_menu_for_user, show_new_client_menu, show_client_menu, show_admin_menu
 )
 
 logger = logging.getLogger(__name__)
@@ -446,29 +447,7 @@ PrometeyLabs — це не просто студія, а власна систе
         
         await query.edit_message_text(text, reply_markup=reply_markup, parse_mode=ParseMode.MARKDOWN)
 
-async def show_new_client_menu_callback(query, context, user):
-    """Показ меню для нових клієнтів (callback версія)"""
-    keyboard = get_main_menu_keyboard()
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    welcome_text = get_main_menu_text(user.first_name if user else 'користувач')
-    
-    await query.edit_message_text(welcome_text, reply_markup=reply_markup, parse_mode=ParseMode.MARKDOWN)
-
-async def show_client_menu_callback(query, context, user):
-    """Показ меню для постійних клієнтів (callback версія)"""
-    keyboard = get_client_menu_keyboard()
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    welcome_text = get_client_menu_text(user.first_name)
-    
-    await query.edit_message_text(welcome_text, reply_markup=reply_markup, parse_mode=ParseMode.MARKDOWN)
-
-async def show_admin_menu_callback(query, context, user):
-    """Показ меню для адміністраторів (callback версія)"""
-    keyboard = get_admin_menu_keyboard()
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    welcome_text = get_admin_menu_text(user.first_name)
-    
-    await query.edit_message_text(welcome_text, reply_markup=reply_markup, parse_mode=ParseMode.MARKDOWN)
+# Функції показу меню тепер винесені в menu_utils.py для уникнення дублювання
 
 async def handle_back_to_menu(query, context):
     """Обробка повернення в головне меню"""
@@ -480,14 +459,9 @@ async def handle_back_to_menu(query, context):
         db_user = db.query(User).filter(User.telegram_id == user.id).first()
         
         if db_user:
-            if db_user.is_client:
-                await show_client_menu_callback(query, context, db_user)
-            elif db_user.is_admin:
-                await show_admin_menu_callback(query, context, db_user)
-            else:
-                await show_new_client_menu_callback(query, context, db_user)
+            await show_menu_for_user(db_user, query, is_callback=True)
         else:
-            await show_new_client_menu_callback(query, context, user)
+            await show_new_client_menu(query, user, is_callback=True)
             
     except Exception as e:
         logger.error(f"Помилка в back_to_menu: {e}")
