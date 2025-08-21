@@ -34,3 +34,32 @@ if not GOOGLE_SHEETS_CREDENTIALS:
     print("⚠️  GOOGLE_SHEETS_CREDENTIALS не налаштовано - Google Sheets функції будуть недоступні")
 if not GOOGLE_SHEETS_ID:
     print("⚠️  GOOGLE_SHEETS_ID не налаштовано - Google Sheets функції будуть недоступні")
+
+# Додаткові перевірки безпеки
+def validate_config():
+    """Валідація конфігурації"""
+    if not BOT_TOKEN:
+        raise ValueError("BOT_TOKEN не налаштовано!")
+    
+    if len(BOT_TOKEN) < 10:
+        raise ValueError("BOT_TOKEN занадто короткий!")
+    
+    # Перевіряємо формат токена (повинен бути число:букви_цифри)
+    if ':' not in BOT_TOKEN:
+        raise ValueError("BOT_TOKEN має неправильний формат!")
+    
+    # Перевіряємо DATABASE_URL
+    if DATABASE_URL.startswith('sqlite'):
+        print("⚠️  Використовується SQLite - рекомендується PostgreSQL для production")
+    
+    print("✅ Конфігурація валідна")
+
+# Запускаємо валідацію
+if __name__ == "__main__":
+    validate_config()
+else:
+    # Тихо валідуємо при імпорті
+    try:
+        validate_config()
+    except Exception as e:
+        print(f"⚠️  Помилка валідації: {e}")

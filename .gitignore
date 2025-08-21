@@ -79,39 +79,10 @@ debug_*.py
 # Keep-alive logs
 keep_alive.log
 
-# Environment files
-.env*
-
-# Database files
-*.db
-*.sqlite
-*.sqlite3
-
-# Log files
-*.log
-logs/
-
 # Python cache
 __pycache__/
 *.py[cod]
 *$py.class
-
-# IDE files
-.vscode/
-.idea/
-.cursor/
-*.swp
-*.swo
-*~
-
-# OS files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
 
 # Virtual environments
 venv/
@@ -119,14 +90,6 @@ env/
 ENV/
 env.bak/
 venv.bak/
-
-# Google credentials
-credentials.json
-token.json
-*.json
-
-# Test files
-test_*.py
 *_test.py
 
 # Debug files

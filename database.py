@@ -82,20 +82,41 @@ class Payment(Base):
 
 # Створення двигуна та сесії
 # Підтримка PostgreSQL (основний) та SQLite (fallback)
-if config.DATABASE_URL.startswith('postgresql'):
-    # Для PostgreSQL додаємо оптимізації
-    engine = create_engine(
-        config.DATABASE_URL,
-        echo=False,
-        pool_pre_ping=True,
-        pool_recycle=300,
-        pool_size=10,
-        max_overflow=20
-    )
-else:
-    # Для SQLite (тільки для розробки)
-    print("⚠️  Використовується SQLite - рекомендується PostgreSQL для production")
-    engine = create_engine(config.DATABASE_URL)
+def create_database_engine():
+    """Створення двигуна бази даних з валідацією"""
+    db_url = config.DATABASE_URL
+    
+    if db_url.startswith('postgresql'):
+        # Для PostgreSQL додаємо оптимізації
+        try:
+            engine = create_engine(
+                db_url,
+                echo=False,
+                pool_pre_ping=True,
+                pool_recycle=300,
+                pool_size=10,
+                max_overflow=20
+            )
+            print("✅ PostgreSQL двигун створено успішно")
+            return engine
+        except Exception as e:
+            print(f"❌ Помилка створення PostgreSQL двигуна: {e}")
+            raise
+    elif db_url.startswith('sqlite'):
+        # Для SQLite (тільки для розробки)
+        print("⚠️  Використовується SQLite - рекомендується PostgreSQL для production")
+        try:
+            engine = create_engine(db_url)
+            print("✅ SQLite двигун створено успішно")
+            return engine
+        except Exception as e:
+            print(f"❌ Помилка створення SQLite двигуна: {e}")
+            raise
+    else:
+        raise ValueError(f"Непідтримуваний тип бази даних: {db_url}")
+
+# Створюємо двигун
+engine = create_database_engine()
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
