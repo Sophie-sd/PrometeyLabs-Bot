@@ -43,34 +43,103 @@ def create_bot():
         logger.error(f"Помилка при створенні бота: {e}", exc_info=True)
         return False
 
+def ensure_bot_initialized():
+    """Перевірка та ініціалізація бота якщо потрібно"""
+    global bot_application
+    
+    if bot_application is None:
+        logger.warning("Бот не ініціалізований, спробую створити...")
+        
+        # Спробуємо створити бота кілька разів
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                logger.info(f"Спроба ініціалізації бота {attempt + 1}/{max_retries}")
+                if create_bot():
+                    logger.info("Бот успішно ініціалізовано")
+                    return True
+                else:
+                    logger.warning(f"Спроба {attempt + 1} невдала")
+            except Exception as e:
+                logger.error(f"Помилка при спробі {attempt + 1}: {e}")
+            
+            if attempt < max_retries - 1:
+                import time
+                time.sleep(2)  # Чекаємо 2 секунди перед наступною спробою
+        
+        logger.error("Всі спроби ініціалізації бота невдалі")
+        return False
+    
+    return True
+
 @app.route('/')
 def health_check():
     """Перевірка здоров'я сервісу для Render"""
+    # Автоматично ініціалізуємо бота якщо потрібно
+    if not bot_application:
+        logger.info("Health check: спробую автоматично ініціалізувати бота...")
+        ensure_bot_initialized()
+    
     bot_status = "initialized" if bot_application else "not_initialized"
     
-    return jsonify({
+    # Детальна інформація про стан
+    health_info = {
         "status": "healthy",
         "service": "PrometeyLabs Telegram Bot",
         "version": "1.0.0",
         "bot_status": bot_status,
-        "timestamp": __import__('datetime').datetime.now().isoformat()
-    })
+        "timestamp": __import__('datetime').datetime.now().isoformat(),
+        "endpoints": {
+            "health": "/",
+            "ping": "/ping",
+            "webhook": "/webhook",
+            "bot_info": "/bot_info",
+            "set_webhook": "/set_webhook"
+        }
+    }
+    
+    # Додаємо додаткову інформацію про бота
+    if bot_application and bot_application.bot:
+        try:
+            bot_info = bot_application.bot.get_me()
+            health_info["bot_details"] = {
+                "id": bot_info.id,
+                "username": bot_info.username,
+                "first_name": bot_info.first_name
+            }
+        except Exception as e:
+            health_info["bot_details"] = {"error": str(e)}
+    
+    return jsonify(health_info)
 
 @app.route('/ping')
 def ping():
     """Keep-alive endpoint для Render free tier"""
-    return jsonify({
+    # Автоматично ініціалізуємо бота якщо потрібно
+    bot_status = "initialized" if bot_application else "not_initialized"
+    
+    ping_info = {
         "pong": True,
         "timestamp": __import__('datetime').datetime.now().isoformat(),
-        "bot_status": "initialized" if bot_application else "not_initialized"
-    })
+        "bot_status": bot_status,
+        "message": "Keep-alive ping successful"
+    }
+    
+    # Якщо бот не ініціалізований, спробуємо його створити
+    if not bot_application:
+        if ensure_bot_initialized():
+            ping_info["bot_status"] = "initialized"
+            ping_info["message"] = "Bot auto-initialized during ping"
+    
+    return jsonify(ping_info)
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
     """Обробка веб-хуків від Telegram"""
-    if bot_application is None:
-        logger.error("Webhook викликано, але бот не ініціалізований")
-        return jsonify({"error": "Bot not initialized"}), 500
+    # Автоматично ініціалізуємо бота якщо потрібно
+    if not ensure_bot_initialized():
+        logger.error("Не вдалося ініціалізувати бота для webhook")
+        return jsonify({"error": "Bot initialization failed"}), 500
     
     try:
         # Отримуємо дані від Telegram
@@ -99,8 +168,8 @@ def webhook():
 @app.route('/set_webhook', methods=['GET'])
 def set_webhook():
     """Встановлення веб-хука для Telegram"""
-    if bot_application is None:
-        return jsonify({"error": "Bot not initialized"}), 500
+    if not ensure_bot_initialized():
+        return jsonify({"error": "Bot initialization failed"}), 500
     
     try:
         # Отримуємо URL сервісу
@@ -129,8 +198,8 @@ def set_webhook():
 @app.route('/delete_webhook', methods=['GET'])
 def delete_webhook():
     """Видалення веб-хука"""
-    if bot_application is None:
-        return jsonify({"error": "Bot not initialized"}), 500
+    if not ensure_bot_initialized():
+        return jsonify({"error": "Bot initialization failed"}), 500
     
     try:
         success = bot_application.bot.delete_webhook()
@@ -148,8 +217,8 @@ def delete_webhook():
 @app.route('/bot_info', methods=['GET'])
 def bot_info():
     """Інформація про бота"""
-    if bot_application is None:
-        return jsonify({"error": "Bot not initialized"}), 500
+    if not ensure_bot_initialized():
+        return jsonify({"error": "Bot initialization failed"}), 500
     
     try:
         bot_info = bot_application.bot.get_me()
@@ -171,7 +240,10 @@ def bot_info():
 
 if __name__ == '__main__':
     # Створюємо бота при запуску
+    logger.info("Запуск PrometeyLabs Telegram Bot Web Server...")
+    
     if create_bot():
+        logger.info("Бот створено успішно, запускаю Flask сервер...")
         # Запускаємо Flask сервер
         port = int(os.environ.get('PORT', 5000))
         app.run(host='0.0.0.0', port=port, debug=False)
