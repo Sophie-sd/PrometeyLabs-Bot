@@ -1,12 +1,13 @@
 """
 Веб-сервер для PrometeyLabs Telegram Bot на Render
+Підтримка python-telegram-bot v21 + Telegram Business
 """
 from flask import Flask, request, jsonify
 import os
 import logging
 import asyncio
 from telegram.ext import Application
-from telegram import Update
+from telegram import Update, BotCommand
 from config import BOT_TOKEN, BOT_NAME, BOT_DESCRIPTION
 from handlers import setup_command_handlers, setup_message_handlers, setup_callback_handlers
 from utils.logger import setup_logging
@@ -58,7 +59,7 @@ def create_bot():
             logger.error(f"Помилка ініціалізації БД: {e}")
             return False
         
-        # Створення застосунку
+        # Створення застосунку з підтримкою Business
         bot_application = Application.builder().token(BOT_TOKEN).build()
         
         # Налаштування обробників
@@ -69,8 +70,14 @@ def create_bot():
         # Додаємо обробник помилок
         bot_application.add_error_handler(error_handler)
         
-        # ІНІЦІАЛІЗУЄМО Application (обов'язково для v20!)
+        # ІНІЦІАЛІЗУЄМО Application (обов'язково для v21!)
         run_async(bot_application.initialize())
+        
+        # Налаштовуємо команди бота
+        run_async(setup_bot_commands())
+        
+        # Налаштовуємо кнопку меню
+        run_async(setup_chat_menu_button())
         
         logger.info(f"✅ Бот {BOT_NAME} створений та ініціалізовано успішно!")
         return True
@@ -78,6 +85,55 @@ def create_bot():
     except Exception as e:
         logger.error(f"Помилка при створенні бота: {e}", exc_info=True)
         return False
+
+async def setup_bot_commands():
+    """Налаштування команд бота"""
+    try:
+        commands = [
+            BotCommand("start", "Почати роботу з ботом"),
+            BotCommand("menu", "Показати головне меню"),
+            BotCommand("help", "Допомога по боту"),
+            BotCommand("support", "Зв'язатися з підтримкою")
+        ]
+        
+        await bot_application.bot.set_my_commands(commands)
+        logger.info("✅ Команди бота налаштовано")
+        
+    except Exception as e:
+        logger.error(f"Помилка налаштування команд: {e}")
+
+async def setup_chat_menu_button():
+    """Налаштування кнопки меню чату"""
+    try:
+        from telegram import MenuButtonCommands
+        
+        await bot_application.bot.set_chat_menu_button(
+            menu_button=MenuButtonCommands()
+        )
+        logger.info("✅ Кнопка меню чату налаштовано")
+        
+    except Exception as e:
+        logger.error(f"Помилка налаштування кнопки меню: {e}")
+
+def log_update_details(update):
+    """Логування деталей оновлення для діагностики Business"""
+    try:
+        update_id = update.update_id
+        has_business_connection = bool(update.business_connection)
+        
+        if update.message:
+            from_id = update.message.from_user.id if update.message.from_user else "N/A"
+            chat_id = update.message.chat.id if update.message.chat else "N/A"
+            business_connection_id = getattr(update.message, 'business_connection_id', None)
+            
+            logger.info(f"📱 Update {update_id}: from={from_id}, chat={chat_id}, "
+                       f"business_connection={has_business_connection}, "
+                       f"business_connection_id={business_connection_id}")
+        else:
+            logger.info(f"📱 Update {update_id}: business_connection={has_business_connection}")
+            
+    except Exception as e:
+        logger.error(f"Помилка логування деталей update: {e}")
 
 def stop_bot():
     """Зупинка бота"""
@@ -224,6 +280,9 @@ def webhook():
         
         # Створюємо Update об'єкт та обробляємо його
         update = Update.de_json(update_data, bot_application.bot)
+        
+        # Логуємо деталі для діагностики Business
+        log_update_details(update)
         
         # Обробляємо оновлення АСИНХРОННО
         try:

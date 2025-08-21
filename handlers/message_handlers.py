@@ -1,7 +1,7 @@
 """
 Обробники повідомлень для PrometeyLabs Telegram Bot
 """
-from telegram import Update
+from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import ContextTypes, MessageHandler, filters
 import logging
 
@@ -14,6 +14,9 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
     
     logger.info(f"Отримано повідомлення від {user.id}: {message_text}")
     
+    # Визначаємо чи це Business чат
+    business_connection_id = getattr(update.message, 'business_connection_id', None)
+    
     # Простий аналіз повідомлення
     if any(word in message_text for word in ['привіт', 'вітаю', 'hello', 'hi']):
         response = f"Привіт, {user.first_name}! 👋 Радий вас бачити!"
@@ -24,7 +27,7 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
     elif any(word in message_text for word in ['ціни', 'прайс', 'prices', 'cost']):
         response = "Для отримання інформації про ціни наших послуг, будь ласка, зверніться до нас:\n📧 info@prometeylabs.com"
     elif any(word in message_text for word in ['проект', 'project', 'розробка', 'development']):
-        response = "Ми спеціалізуємося на розробці веб та мобільних додатків! Напишіть /about для детальної інформації."
+        response = "💻 Ми спеціалізуємося на розробці веб та мобільних додатків! Напишіть /start для детальної інформації."
     elif any(word in message_text for word in ['сайт', 'website', 'веб-сайт']):
         response = "💻 Ми створюємо унікальні сайти під ключ за $300-700! Напишіть /start для замовлення."
     elif any(word in message_text for word in ['реклама', 'ads', 'маркетинг']):
@@ -36,9 +39,32 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
     elif any(word in message_text for word in ['навчання', 'курси', 'уроки']):
         response = "🎓 Проводимо курси з IT, маркетингу та AI! Напишіть /start для інформації."
     else:
-        response = f"Дякую за ваше повідомлення, {user.first_name}! 🤖\n\nЯкщо у вас є питання про наші послуги, напишіть /start для перегляду меню."
+        # Якщо це перше повідомлення від користувача - показуємо меню
+        response = f"Вітаю, {user.first_name}! 👋\n\nЛаскаво просимо до PrometeyLabs! Оберіть що вас цікавить:"
+        
+        # Створюємо ReplyKeyboard для Business
+        keyboard = [
+            [KeyboardButton("🛍️ Послуги"), KeyboardButton("ℹ️ Про компанію")],
+            [KeyboardButton("📞 Підтримка"), KeyboardButton("💼 Мій кабінет")]
+        ]
+        reply_markup = ReplyKeyboardMarkup(
+            keyboard, 
+            one_time_keyboard=False, 
+            resize_keyboard=True
+        )
+        
+        await update.message.reply_text(
+            response,
+            reply_markup=reply_markup,
+            business_connection_id=business_connection_id
+        )
+        return
     
-    await update.message.reply_text(response)
+    # Відправляємо відповідь з підтримкою Business
+    await update.message.reply_text(
+        response,
+        business_connection_id=business_connection_id
+    )
     logger.info(f"Відправлено відповідь користувачу {user.id}")
 
 async def handle_photo_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:

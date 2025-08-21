@@ -1,11 +1,11 @@
 """
 Обробники команд для PrometeyLabs Telegram Bot
 """
-from telegram import Update, InlineKeyboardMarkup
+from telegram import Update, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import ContextTypes, CommandHandler
 from telegram.constants import ParseMode
 import logging
-from .menu_utils import show_menu_for_user
+from .menu_utils import show_menu_for_user, get_main_menu_keyboard, get_main_menu_text
 
 logger = logging.getLogger(__name__)
 
@@ -14,8 +14,8 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     user = update.effective_user
     
     try:
-        # Показуємо головне меню без залежності від БД
-        await show_menu_for_user(user, update, is_callback=False)
+        # Показуємо головне меню з ReplyKeyboard для Business
+        await show_main_menu_with_reply_keyboard(update, user)
         logger.info(f"Користувач {user.id} запустив бота")
             
     except Exception as e:
@@ -68,7 +68,52 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 async def menu_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Обробник команди /menu"""
-    await start_command(update, context)
+    user = update.effective_user
+    
+    try:
+        # Показуємо головне меню з ReplyKeyboard
+        await show_main_menu_with_reply_keyboard(update, user)
+        logger.info(f"Користувач {user.id} запросив меню")
+            
+    except Exception as e:
+        logger.error(f"Помилка в menu_command: {e}")
+        # Fallback - просте меню
+        await update.message.reply_text(
+            get_main_menu_text(user.first_name or "Користувач"),
+            reply_markup=InlineKeyboardMarkup(get_main_menu_keyboard())
+        )
+
+async def show_main_menu_with_reply_keyboard(update: Update, user):
+    """Показ головного меню з ReplyKeyboard для Business"""
+    try:
+        # Створюємо ReplyKeyboard
+        keyboard = [
+            [KeyboardButton("🛍️ Послуги"), KeyboardButton("ℹ️ Про компанію")],
+            [KeyboardButton("📞 Підтримка"), KeyboardButton("💼 Мій кабінет")]
+        ]
+        reply_markup = ReplyKeyboardMarkup(
+            keyboard, 
+            one_time_keyboard=False, 
+            resize_keyboard=True
+        )
+        
+        # Визначаємо чи це Business чат
+        business_connection_id = getattr(update.message, 'business_connection_id', None)
+        
+        # Відправляємо меню
+        await update.message.reply_text(
+            get_main_menu_text(user.first_name or "Користувач"),
+            reply_markup=reply_markup,
+            business_connection_id=business_connection_id
+        )
+        
+    except Exception as e:
+        logger.error(f"Помилка показу ReplyKeyboard меню: {e}")
+        # Fallback до InlineKeyboard
+        await update.message.reply_text(
+            get_main_menu_text(user.first_name or "Користувач"),
+            reply_markup=InlineKeyboardMarkup(get_main_menu_keyboard())
+        )
 
 async def support_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Обробник команди /support"""
