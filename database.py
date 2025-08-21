@@ -103,10 +103,23 @@ def create_database_engine():
             print(f"❌ Помилка створення PostgreSQL двигуна: {e}")
             raise
     elif db_url.startswith('sqlite'):
-        # Для SQLite (тільки для розробки)
-        print("⚠️  Використовується SQLite - рекомендується PostgreSQL для production")
+        # Для SQLite (розробка + production на Render)
+        print("ℹ️  Використовується SQLite")
         try:
-            engine = create_engine(db_url)
+            # Створюємо директорію для SQLite файлу
+            import os
+            db_path = db_url.replace('sqlite:///', '')
+            db_dir = os.path.dirname(db_path)
+            if db_dir and not os.path.exists(db_dir):
+                os.makedirs(db_dir, exist_ok=True)
+                print(f"✅ Створено директорію: {db_dir}")
+            
+            # SQLite двигун з оптимізаціями для production
+            engine = create_engine(
+                db_url,
+                connect_args={"check_same_thread": False},
+                pool_pre_ping=True
+            )
             print("✅ SQLite двигун створено успішно")
             return engine
         except Exception as e:
@@ -119,6 +132,27 @@ def create_database_engine():
 engine = create_database_engine()
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+def init_database():
+    """Ініціалізація бази даних - створення таблиць"""
+    try:
+        # Створюємо всі таблиці
+        Base.metadata.create_all(bind=engine)
+        print("✅ Таблиці бази даних створено успішно")
+        return True
+    except Exception as e:
+        print(f"❌ Помилка створення таблиць: {e}")
+        return False
+
+# Ініціалізуємо базу даних при імпорті
+if __name__ == "__main__":
+    init_database()
+else:
+    # Тихо ініціалізуємо при імпорті
+    try:
+        init_database()
+    except Exception as e:
+        print(f"⚠️  Помилка ініціалізації БД: {e}")
 
 def create_tables():
     """Створення таблиць"""

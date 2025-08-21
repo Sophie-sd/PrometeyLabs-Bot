@@ -24,9 +24,16 @@ def create_bot():
     global bot_application
     
     try:
-        # Створення таблиць бази даних
-        create_tables()
-        logger.info("База даних створена/підключена успішно")
+        # Перевіряємо базу даних
+        try:
+            from database import init_database
+            if not init_database():
+                logger.error("Не вдалося ініціалізувати базу даних")
+                return False
+            logger.info("✅ База даних готова")
+        except Exception as e:
+            logger.error(f"Помилка ініціалізації БД: {e}")
+            return False
         
         # Створення застосунку
         bot_application = Application.builder().token(BOT_TOKEN).build()
@@ -36,7 +43,7 @@ def create_bot():
         setup_message_handlers(bot_application)
         setup_callback_handlers(bot_application)
         
-        logger.info(f"Бот {BOT_NAME} створений успішно!")
+        logger.info(f"✅ Бот {BOT_NAME} створений успішно!")
         return True
         
     except Exception as e:

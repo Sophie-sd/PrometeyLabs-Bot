@@ -39,6 +39,11 @@ venv.bak/
 *.db
 *.sqlite
 *.sqlite3
+# Але зберігаємо директорію data
+!data/
+data/*.db
+data/*.sqlite
+data/*.sqlite3
 
 # Logs
 *.log
