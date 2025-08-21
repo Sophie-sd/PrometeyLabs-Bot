@@ -5,8 +5,6 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, CallbackQueryHandler
 from telegram.constants import ParseMode
 import logging
-from database import SessionLocal, User, Project, Payment
-from google_sheets import get_client_projects, get_client_payments, get_client_statistics
 from .menu_utils import (
     get_main_menu_keyboard, get_services_menu_keyboard, get_client_menu_keyboard, get_admin_menu_keyboard,
     get_main_menu_text, get_services_menu_text, get_client_menu_text, get_admin_menu_text,

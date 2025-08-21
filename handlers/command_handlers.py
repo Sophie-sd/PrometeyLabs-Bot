@@ -5,13 +5,7 @@ from telegram import Update, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, CommandHandler
 from telegram.constants import ParseMode
 import logging
-from database import SessionLocal, User, Project, Payment
-from google_sheets import get_client_projects, get_client_payments, get_client_statistics
-from .menu_utils import (
-    get_main_menu_keyboard, get_client_menu_keyboard, get_admin_menu_keyboard,
-    get_main_menu_text, get_client_menu_text, get_admin_menu_text,
-    show_menu_for_user, show_new_client_menu, show_client_menu, show_admin_menu
-)
+from .menu_utils import show_menu_for_user
 
 logger = logging.getLogger(__name__)
 
@@ -19,31 +13,19 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     """Обробник команди /start"""
     user = update.effective_user
     
-    # Перевіряємо чи користувач вже є в базі
-    db = SessionLocal()
     try:
-        db_user = db.query(User).filter(User.telegram_id == user.id).first()
-        
-        if not db_user:
-            # Створюємо нового користувача
-            db_user = User(
-                telegram_id=user.id,
-                username=user.username,
-                first_name=user.first_name,
-                last_name=user.last_name
-            )
-            db.add(db_user)
-            db.commit()
-            logger.info(f"Створено нового користувача: {user.id}")
-        
-        # Показуємо головне меню
-        await show_menu_for_user(db_user, update, is_callback=False)
+        # Показуємо головне меню без залежності від БД
+        await show_menu_for_user(user, update, is_callback=False)
+        logger.info(f"Користувач {user.id} запустив бота")
             
     except Exception as e:
         logger.error(f"Помилка в start_command: {e}")
-        await update.message.reply_text("Виникла помилка. Спробуйте ще раз.")
-    finally:
-        db.close()
+        # Fallback - просте меню без залежності від утиліт
+        from .menu_utils import get_main_menu_text, get_main_menu_keyboard
+        await update.message.reply_text(
+            get_main_menu_text(user.first_name or "Користувач"),
+            reply_markup=InlineKeyboardMarkup(get_main_menu_keyboard())
+        )
 
 # Функції показу меню тепер винесені в menu_utils.py для уникнення дублювання
 

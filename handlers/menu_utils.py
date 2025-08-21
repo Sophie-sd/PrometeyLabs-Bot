@@ -143,12 +143,16 @@ def get_admin_menu_text(user_name):
 # Спільні функції для показу меню (використовуються як в командах, так і в callback)
 def show_menu_for_user(user, update_or_query, is_callback=False):
     """Універсальна функція для показу меню користувача"""
-    if user.is_client:
-        return show_client_menu(update_or_query, user, is_callback)
-    elif user.is_admin:
-        return show_admin_menu(update_or_query, user, is_callback)
-    else:
+    try:
+        # Спрощена логіка без залежності від БД
+        # За замовчуванням показуємо меню для нових клієнтів
         return show_new_client_menu(update_or_query, user, is_callback)
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Помилка показу меню: {e}")
+        # Fallback до головного меню
+        return show_main_menu(update_or_query, user, is_callback)
 
 def show_new_client_menu(update_or_query, user, is_callback=False):
     """Показ меню для нових клієнтів"""
@@ -177,6 +181,17 @@ def show_admin_menu(update_or_query, user, is_callback=False):
     keyboard = get_admin_menu_keyboard()
     reply_markup = InlineKeyboardMarkup(keyboard)
     welcome_text = get_admin_menu_text(user.first_name)
+    
+    if is_callback:
+        return update_or_query.edit_message_text(welcome_text, reply_markup=reply_markup, parse_mode='Markdown')
+    else:
+        return update_or_query.message.reply_text(welcome_text, reply_markup=reply_markup, parse_mode='Markdown')
+
+def show_main_menu(update_or_query, user, is_callback=False):
+    """Fallback функція для показу головного меню"""
+    keyboard = get_main_menu_keyboard()
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    welcome_text = get_main_menu_text(user.first_name if user else 'користувач')
     
     if is_callback:
         return update_or_query.edit_message_text(welcome_text, reply_markup=reply_markup, parse_mode='Markdown')

@@ -8,7 +8,6 @@ from telegram.ext import Application
 from config import BOT_TOKEN, BOT_NAME, BOT_DESCRIPTION
 from handlers import setup_command_handlers, setup_message_handlers, setup_callback_handlers
 from utils.logger import setup_logging
-from database import create_tables
 
 # Налаштування логування
 logger = setup_logging()
@@ -18,6 +17,18 @@ app = Flask(__name__)
 
 # Глобальна змінна для бота
 bot_application = None
+
+async def error_handler(update, context):
+    """Обробник помилок"""
+    try:
+        if update and update.effective_user:
+            user_id = update.effective_user.id
+            username = update.effective_user.username or "Unknown"
+            logger.error(f"Помилка при обробці оновлення від користувача {user_id} (@{username}): {context.error}")
+        else:
+            logger.error(f"Помилка при обробці оновлення: {context.error}")
+    except Exception as e:
+        logger.error(f"Помилка в error_handler: {e}")
 
 def create_bot():
     """Створення та налаштування бота"""
@@ -42,6 +53,9 @@ def create_bot():
         setup_command_handlers(bot_application)
         setup_message_handlers(bot_application)
         setup_callback_handlers(bot_application)
+        
+        # Додаємо обробник помилок
+        bot_application.add_error_handler(error_handler)
         
         logger.info(f"✅ Бот {BOT_NAME} створений успішно!")
         return True
