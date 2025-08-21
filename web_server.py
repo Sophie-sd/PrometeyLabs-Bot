@@ -121,14 +121,22 @@ def log_update_details(update):
         update_id = update.update_id
         has_business_connection = bool(update.business_connection)
         
-        if update.message:
-            from_id = update.message.from_user.id if update.message.from_user else "N/A"
-            chat_id = update.message.chat.id if update.message.chat else "N/A"
-            business_connection_id = getattr(update.message, 'business_connection_id', None)
+        # Правильно беремо business_connection_id з effective_message
+        if update.effective_message:
+            from_id = update.effective_message.from_user.id if update.effective_message.from_user else "N/A"
+            chat_id = update.effective_message.chat.id if update.effective_message.chat else "N/A"
+            business_connection_id = getattr(update.effective_message, 'business_connection_id', None)
             
-            logger.info(f"📱 Update {update_id}: from={from_id}, chat={chat_id}, "
-                       f"business_connection={has_business_connection}, "
-                       f"business_connection_id={business_connection_id}")
+            logger.info(f"📱 Update {update_id}: bcid={business_connection_id}, from={from_id}, chat={chat_id}, "
+                       f"business_connection={has_business_connection}")
+        elif update.callback_query:
+            # Для callback запитів
+            from_id = update.callback_query.from_user.id if update.callback_query.from_user else "N/A"
+            chat_id = update.callback_query.message.chat.id if update.callback_query.message else "N/A"
+            business_connection_id = getattr(update.callback_query.message, 'business_connection_id', None)
+            
+            logger.info(f"📱 Update {update_id}: bcid={business_connection_id}, from={from_id}, chat={chat_id}, "
+                       f"callback_query")
         else:
             logger.info(f"📱 Update {update_id}: business_connection={has_business_connection}")
             

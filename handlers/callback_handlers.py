@@ -21,7 +21,10 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
     callback_data = query.data
     user = update.effective_user
     
-    logger.info(f"Callback від користувача {user.id}: {callback_data}")
+    # Визначаємо business_connection_id для callback
+    business_connection_id = getattr(query.message, 'business_connection_id', None)
+    
+    logger.info(f"Callback від користувача {user.id}: {callback_data} з bcid={business_connection_id}")
     
     try:
         if callback_data.startswith("order_"):
@@ -44,11 +47,21 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
             await handle_back_to_menu(query, context)
         else:
             logger.warning(f"Невідома callback дія: {callback_data}")
-            await query.edit_message_text("Невідома дія. Спробуйте ще раз.")
+            # Визначаємо business_connection_id для відповіді
+            business_connection_id = getattr(query.message, 'business_connection_id', None)
+            await query.edit_message_text(
+                "Невідома дія. Спробуйте ще раз.",
+                business_connection_id=business_connection_id
+            )
             
     except Exception as e:
         logger.error(f"Помилка в callback_handler: {e}")
-        await query.edit_message_text("Виникла помилка. Спробуйте ще раз.")
+        # Визначаємо business_connection_id для відповіді
+        business_connection_id = getattr(query.message, 'business_connection_id', None)
+        await query.edit_message_text(
+            "Виникла помилка. Спробуйте ще раз.",
+            business_connection_id=business_connection_id
+        )
 
 async def handle_order_services(query, context, callback_data):
     """Обробка замовлень послуг"""

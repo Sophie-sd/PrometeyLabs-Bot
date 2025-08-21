@@ -14,8 +14,8 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
     
     logger.info(f"Отримано повідомлення від {user.id}: {message_text}")
     
-    # Визначаємо чи це Business чат
-    business_connection_id = getattr(update.message, 'business_connection_id', None)
+    # Визначаємо чи це Business чат (правильно з effective_message)
+    business_connection_id = getattr(update.effective_message, 'business_connection_id', None)
     
     # Простий аналіз повідомлення
     if any(word in message_text for word in ['привіт', 'вітаю', 'hello', 'hi']):
@@ -73,8 +73,14 @@ async def handle_photo_message(update: Update, context: ContextTypes.DEFAULT_TYP
     
     response = f"Дякую за фото, {user.first_name}! 📸\n\nНа жаль, я поки що не можу аналізувати зображення. Спробуйте написати текст або використати команди."
     
-    await update.message.reply_text(response)
-    logger.info(f"Отримано фото від користувача {user.id}")
+    # Визначаємо business_connection_id
+    business_connection_id = getattr(update.effective_message, 'business_connection_id', None)
+    
+    await update.message.reply_text(
+        response,
+        business_connection_id=business_connection_id
+    )
+    logger.info(f"Отримано фото від користувача {user.id} з bcid={business_connection_id}")
 
 async def handle_document_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Обробник документів"""
@@ -83,8 +89,14 @@ async def handle_document_message(update: Update, context: ContextTypes.DEFAULT_
     
     response = f"Дякую за документ '{document.file_name}', {user.first_name}! 📄\n\nНа жаль, я поки що не можу обробляти документи. Спробуйте написати текст або використати команди."
     
-    await update.message.reply_text(response)
-    logger.info(f"Отримано документ від користувача {user.id}: {document.file_name}")
+    # Визначаємо business_connection_id
+    business_connection_id = getattr(update.effective_message, 'business_connection_id', None)
+    
+    await update.message.reply_text(
+        response,
+        business_connection_id=business_connection_id
+    )
+    logger.info(f"Отримано документ від користувача {user.id}: {document.file_name} з bcid={business_connection_id}")
 
 async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Обробник голосових повідомлень"""
@@ -92,8 +104,14 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
     
     response = f"Дякую за голосове повідомлення, {user.first_name}! 🎤\n\nНа жаль, я поки що не можу розпізнавати мову. Спробуйте написати текст або використати команди."
     
-    await update.message.reply_text(response)
-    logger.info(f"Отримано голосове повідомлення від користувача {user.id}")
+    # Визначаємо business_connection_id
+    business_connection_id = getattr(update.effective_message, 'business_connection_id', None)
+    
+    await update.message.reply_text(
+        response,
+        business_connection_id=business_connection_id
+    )
+    logger.info(f"Отримано голосове повідомлення від користувача {user.id} з bcid={business_connection_id}")
 
 def setup_message_handlers(application):
     """Налаштування обробників повідомлень"""

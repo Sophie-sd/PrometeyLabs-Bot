@@ -63,8 +63,15 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 💬 **Або просто напишіть ваше питання, і ми відповімо найближчим часом!**
     """
     
-    await update.message.reply_text(help_text, parse_mode=ParseMode.MARKDOWN)
-    logger.info(f"Користувач {update.effective_user.id} запросив допомогу")
+    # Визначаємо business_connection_id
+    business_connection_id = getattr(update.effective_message, 'business_connection_id', None)
+    
+    await update.message.reply_text(
+        help_text, 
+        parse_mode=ParseMode.MARKDOWN,
+        business_connection_id=business_connection_id
+    )
+    logger.info(f"Користувач {update.effective_user.id} запросив допомогу з bcid={business_connection_id}")
 
 async def menu_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Обробник команди /menu"""
@@ -97,8 +104,11 @@ async def show_main_menu_with_reply_keyboard(update: Update, user):
             resize_keyboard=True
         )
         
-        # Визначаємо чи це Business чат
-        business_connection_id = getattr(update.message, 'business_connection_id', None)
+        # Визначаємо чи це Business чат (правильно з effective_message)
+        business_connection_id = getattr(update.effective_message, 'business_connection_id', None)
+        
+        # Логуємо для діагностики
+        logger.info(f"Відправляю ReplyKeyboard меню з bcid={business_connection_id}")
         
         # Відправляємо меню
         await update.message.reply_text(
@@ -140,8 +150,15 @@ async def support_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 💬 **Або просто напишіть ваше питання, і ми відповімо найближчим часом!**
     """
     
-    await update.message.reply_text(support_text, parse_mode=ParseMode.MARKDOWN)
-    logger.info(f"Користувач {update.effective_user.id} звернувся до підтримки")
+    # Визначаємо business_connection_id
+    business_connection_id = getattr(update.effective_message, 'business_connection_id', None)
+    
+    await update.message.reply_text(
+        support_text, 
+        parse_mode=ParseMode.MARKDOWN,
+        business_connection_id=business_connection_id
+    )
+    logger.info(f"Користувач {update.effective_user.id} звернувся до підтримки з bcid={business_connection_id}")
 
 def setup_command_handlers(application):
     """Налаштування обробників команд"""

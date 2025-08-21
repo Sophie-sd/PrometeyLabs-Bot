@@ -3,6 +3,16 @@
 """
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
+def get_business_connection_id(update_or_query, is_callback=False):
+    """Утилітна функція для отримання business_connection_id"""
+    try:
+        if is_callback:
+            return getattr(update_or_query.message, 'business_connection_id', None)
+        else:
+            return getattr(update_or_query.effective_message, 'business_connection_id', None)
+    except Exception:
+        return None
+
 def get_main_menu_keyboard():
     """Отримання клавіатури головного меню"""
     return [
@@ -160,10 +170,23 @@ def show_new_client_menu(update_or_query, user, is_callback=False):
     reply_markup = InlineKeyboardMarkup(keyboard)
     welcome_text = get_main_menu_text(user.first_name if user else 'користувач')
     
+    # Визначаємо business_connection_id через утилітну функцію
+    business_connection_id = get_business_connection_id(update_or_query, is_callback)
+    
     if is_callback:
-        return update_or_query.edit_message_text(welcome_text, reply_markup=reply_markup, parse_mode='Markdown')
+        return update_or_query.edit_message_text(
+            welcome_text, 
+            reply_markup=reply_markup, 
+            parse_mode='Markdown',
+            business_connection_id=business_connection_id
+        )
     else:
-        return update_or_query.message.reply_text(welcome_text, reply_markup=reply_markup, parse_mode='Markdown')
+        return update_or_query.message.reply_text(
+            welcome_text, 
+            reply_markup=reply_markup, 
+            parse_mode='Markdown',
+            business_connection_id=business_connection_id
+        )
 
 def show_client_menu(update_or_query, user, is_callback=False):
     """Показ меню для постійних клієнтів"""
@@ -171,10 +194,23 @@ def show_client_menu(update_or_query, user, is_callback=False):
     reply_markup = InlineKeyboardMarkup(keyboard)
     welcome_text = get_client_menu_text(user.first_name)
     
+    # Визначаємо business_connection_id
     if is_callback:
-        return update_or_query.edit_message_text(welcome_text, reply_markup=reply_markup, parse_mode='Markdown')
+        business_connection_id = getattr(update_or_query.message, 'business_connection_id', None)
+        return update_or_query.edit_message_text(
+            welcome_text, 
+            reply_markup=reply_markup, 
+            parse_mode='Markdown',
+            business_connection_id=business_connection_id
+        )
     else:
-        return update_or_query.message.reply_text(welcome_text, reply_markup=reply_markup, parse_mode='Markdown')
+        business_connection_id = getattr(update_or_query.effective_message, 'business_connection_id', None)
+        return update_or_query.message.reply_text(
+            welcome_text, 
+            reply_markup=reply_markup, 
+            parse_mode='Markdown',
+            business_connection_id=business_connection_id
+        )
 
 def show_admin_menu(update_or_query, user, is_callback=False):
     """Показ меню для адміністраторів"""
@@ -182,10 +218,23 @@ def show_admin_menu(update_or_query, user, is_callback=False):
     reply_markup = InlineKeyboardMarkup(keyboard)
     welcome_text = get_admin_menu_text(user.first_name)
     
+    # Визначаємо business_connection_id
     if is_callback:
-        return update_or_query.edit_message_text(welcome_text, reply_markup=reply_markup, parse_mode='Markdown')
+        business_connection_id = getattr(update_or_query.message, 'business_connection_id', None)
+        return update_or_query.edit_message_text(
+            welcome_text, 
+            reply_markup=reply_markup, 
+            parse_mode='Markdown',
+            business_connection_id=business_connection_id
+        )
     else:
-        return update_or_query.message.reply_text(welcome_text, reply_markup=reply_markup, parse_mode='Markdown')
+        business_connection_id = getattr(update_or_query.effective_message, 'business_connection_id', None)
+        return update_or_query.message.reply_text(
+            welcome_text, 
+            reply_markup=reply_markup, 
+            parse_mode='Markdown',
+            business_connection_id=business_connection_id
+        )
 
 def show_main_menu(update_or_query, user, is_callback=False):
     """Fallback функція для показу головного меню"""
@@ -193,7 +242,20 @@ def show_main_menu(update_or_query, user, is_callback=False):
     reply_markup = InlineKeyboardMarkup(keyboard)
     welcome_text = get_main_menu_text(user.first_name if user else 'користувач')
     
+    # Визначаємо business_connection_id
     if is_callback:
-        return update_or_query.edit_message_text(welcome_text, reply_markup=reply_markup, parse_mode='Markdown')
+        business_connection_id = getattr(update_or_query.message, 'business_connection_id', None)
+        return update_or_query.edit_message_text(
+            welcome_text, 
+            reply_markup=reply_markup, 
+            parse_mode='Markdown',
+            business_connection_id=business_connection_id
+        )
     else:
-        return update_or_query.message.reply_text(welcome_text, reply_markup=reply_markup, parse_mode='Markdown')
+        business_connection_id = getattr(update_or_query.effective_message, 'business_connection_id', None)
+        return update_or_query.message.reply_text(
+            welcome_text, 
+            reply_markup=reply_markup, 
+            parse_mode='Markdown',
+            business_connection_id=business_connection_id
+        )
