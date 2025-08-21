@@ -69,12 +69,29 @@ def create_bot():
         # Додаємо обробник помилок
         bot_application.add_error_handler(error_handler)
         
-        logger.info(f"✅ Бот {BOT_NAME} створений успішно!")
+        # ІНІЦІАЛІЗУЄМО Application (обов'язково для v20!)
+        run_async(bot_application.initialize())
+        
+        logger.info(f"✅ Бот {BOT_NAME} створений та ініціалізовано успішно!")
         return True
         
     except Exception as e:
         logger.error(f"Помилка при створенні бота: {e}", exc_info=True)
         return False
+
+def stop_bot():
+    """Зупинка бота"""
+    global bot_application
+    
+    if bot_application:
+        try:
+            run_async(bot_application.stop())
+            run_async(bot_application.shutdown())
+            logger.info("✅ Бот зупинено успішно")
+        except Exception as e:
+            logger.error(f"Помилка при зупинці бота: {e}")
+        finally:
+            bot_application = None
 
 def ensure_bot_initialized():
     """Перевірка та ініціалізація бота якщо потрібно"""
@@ -103,7 +120,17 @@ def ensure_bot_initialized():
         logger.error("Всі спроби ініціалізації бота невдалі")
         return False
     
-    return True
+    # Перевіряємо чи бот дійсно ініціалізований
+    try:
+        if hasattr(bot_application, '_initialized') and bot_application._initialized:
+            return True
+        else:
+            logger.warning("Бот створено, але не ініціалізовано. Переініціалізую...")
+            run_async(bot_application.initialize())
+            return True
+    except Exception as e:
+        logger.error(f"Помилка перевірки ініціалізації: {e}")
+        return False
 
 @app.route('/')
 def health_check():
@@ -199,10 +226,13 @@ def webhook():
         update = Update.de_json(update_data, bot_application.bot)
         
         # Обробляємо оновлення АСИНХРОННО
-        run_async(bot_application.process_update(update))
-        
-        logger.info(f"Webhook оброблено успішно: {update.update_id}")
-        return jsonify({"status": "ok", "update_id": update.update_id})
+        try:
+            run_async(bot_application.process_update(update))
+            logger.info(f"Webhook оброблено успішно: {update.update_id}")
+            return jsonify({"status": "ok", "update_id": update.update_id})
+        except Exception as process_error:
+            logger.error(f"Помилка обробки оновлення: {process_error}")
+            return jsonify({"error": "Update processing failed"}), 500
         
     except Exception as e:
         logger.error(f"Помилка в webhook: {e}", exc_info=True)
@@ -285,6 +315,18 @@ def bot_info():
 if __name__ == '__main__':
     # Створюємо бота при запуску
     logger.info("Запуск PrometeyLabs Telegram Bot Web Server...")
+    
+    # Додаємо обробник сигналів для правильної зупинки
+    import signal
+    import sys
+    
+    def signal_handler(sig, frame):
+        logger.info("Отримано сигнал зупинки, зупиняю бота...")
+        stop_bot()
+        sys.exit(0)
+    
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
     
     # Спробуємо створити бота, але не зупиняємо сервер при помилці
     try:

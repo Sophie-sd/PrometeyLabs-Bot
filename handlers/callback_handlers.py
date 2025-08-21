@@ -451,21 +451,13 @@ async def handle_back_to_menu(query, context):
     """Обробка повернення в головне меню"""
     user = query.from_user
     
-    # Отримуємо користувача з бази
-    db = SessionLocal()
     try:
-        db_user = db.query(User).filter(User.telegram_id == user.id).first()
-        
-        if db_user:
-            await show_menu_for_user(db_user, query, is_callback=True)
-        else:
-            await show_new_client_menu(query, user, is_callback=True)
+        # Показуємо головне меню без залежності від БД
+        await show_new_client_menu(query, user, is_callback=True)
             
     except Exception as e:
         logger.error(f"Помилка в back_to_menu: {e}")
         await query.edit_message_text("Виникла помилка. Спробуйте /start")
-    finally:
-        db.close()
 
 def setup_callback_handlers(application):
     """Налаштування обробників callback-запитів"""
