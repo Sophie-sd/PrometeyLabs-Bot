@@ -75,63 +75,73 @@ def ensure_bot_initialized():
 @app.route('/')
 def health_check():
     """Перевірка здоров'я сервісу для Render"""
-    # Автоматично ініціалізуємо бота якщо потрібно
-    if not bot_application:
-        logger.info("Health check: спробую автоматично ініціалізувати бота...")
-        ensure_bot_initialized()
-    
-    bot_status = "initialized" if bot_application else "not_initialized"
-    
-    # Детальна інформація про стан
-    health_info = {
-        "status": "healthy",
-        "service": "PrometeyLabs Telegram Bot",
-        "version": "1.0.0",
-        "bot_status": bot_status,
-        "timestamp": __import__('datetime').datetime.now().isoformat(),
-        "endpoints": {
-            "health": "/",
-            "ping": "/ping",
-            "webhook": "/webhook",
-            "bot_info": "/bot_info",
-            "set_webhook": "/set_webhook"
-        }
-    }
-    
-    # Додаємо додаткову інформацію про бота
-    if bot_application and bot_application.bot:
-        try:
-            bot_info = bot_application.bot.get_me()
-            health_info["bot_details"] = {
-                "id": bot_info.id,
-                "username": bot_info.username,
-                "first_name": bot_info.first_name
+    try:
+        # Простий health check без складних операцій
+        bot_status = "initialized" if bot_application else "not_initialized"
+        
+        health_info = {
+            "status": "healthy",
+            "service": "PrometeyLabs Telegram Bot",
+            "version": "1.0.0",
+            "bot_status": bot_status,
+            "timestamp": __import__('datetime').datetime.now().isoformat(),
+            "endpoints": {
+                "health": "/",
+                "ping": "/ping",
+                "webhook": "/webhook",
+                "bot_info": "/bot_info",
+                "set_webhook": "/set_webhook"
             }
-        except Exception as e:
-            health_info["bot_details"] = {"error": str(e)}
-    
-    return jsonify(health_info)
+        }
+        
+        # Додаємо додаткову інформацію про бота (тільки якщо він готовий)
+        if bot_application and bot_application.bot and bot_status == "initialized":
+            try:
+                bot_info = bot_application.bot.get_me()
+                health_info["bot_details"] = {
+                    "id": bot_info.id,
+                    "username": bot_info.username,
+                    "first_name": bot_info.first_name
+                }
+            except Exception as e:
+                health_info["bot_details"] = {"error": str(e)}
+        
+        return jsonify(health_info)
+        
+    except Exception as e:
+        logger.error(f"Помилка в health check: {e}")
+        # Повертаємо простий response навіть при помилці
+        return jsonify({
+            "status": "error",
+            "service": "PrometeyLabs Telegram Bot",
+            "error": str(e),
+            "timestamp": __import__('datetime').datetime.now().isoformat()
+        }), 500
 
 @app.route('/ping')
 def ping():
     """Keep-alive endpoint для Render free tier"""
-    # Автоматично ініціалізуємо бота якщо потрібно
-    bot_status = "initialized" if bot_application else "not_initialized"
-    
-    ping_info = {
-        "pong": True,
-        "timestamp": __import__('datetime').datetime.now().isoformat(),
-        "bot_status": bot_status,
-        "message": "Keep-alive ping successful"
-    }
-    
-    # Якщо бот не ініціалізований, спробуємо його створити
-    if not bot_application:
-        if ensure_bot_initialized():
-            ping_info["bot_status"] = "initialized"
-            ping_info["message"] = "Bot auto-initialized during ping"
-    
-    return jsonify(ping_info)
+    try:
+        # Простий ping без складних операцій
+        bot_status = "initialized" if bot_application else "not_initialized"
+        
+        ping_info = {
+            "pong": True,
+            "timestamp": __import__('datetime').datetime.now().isoformat(),
+            "bot_status": bot_status,
+            "message": "Keep-alive ping successful"
+        }
+        
+        return jsonify(ping_info)
+        
+    except Exception as e:
+        logger.error(f"Помилка в ping: {e}")
+        # Повертаємо простий response навіть при помилці
+        return jsonify({
+            "pong": False,
+            "error": str(e),
+            "timestamp": __import__('datetime').datetime.now().isoformat()
+        }), 500
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
@@ -242,11 +252,17 @@ if __name__ == '__main__':
     # Створюємо бота при запуску
     logger.info("Запуск PrometeyLabs Telegram Bot Web Server...")
     
-    if create_bot():
-        logger.info("Бот створено успішно, запускаю Flask сервер...")
-        # Запускаємо Flask сервер
-        port = int(os.environ.get('PORT', 5000))
-        app.run(host='0.0.0.0', port=port, debug=False)
-    else:
-        logger.error("Не вдалося створити бота. Завершення роботи.")
-        exit(1)
+    # Спробуємо створити бота, але не зупиняємо сервер при помилці
+    try:
+        if create_bot():
+            logger.info("Бот створено успішно!")
+        else:
+            logger.warning("Бот не створено при запуску, але сервер продовжує роботу")
+    except Exception as e:
+        logger.error(f"Помилка при створенні бота: {e}")
+        logger.warning("Сервер продовжує роботу, бот буде створено при першому запиті")
+    
+    # Запускаємо Flask сервер в будь-якому випадку
+    logger.info("Запускаю Flask сервер...")
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
