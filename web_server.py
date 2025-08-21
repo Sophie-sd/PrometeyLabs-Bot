@@ -4,7 +4,9 @@
 from flask import Flask, request, jsonify
 import os
 import logging
+import asyncio
 from telegram.ext import Application
+from telegram import Update
 from config import BOT_TOKEN, BOT_NAME, BOT_DESCRIPTION
 from handlers import setup_command_handlers, setup_message_handlers, setup_callback_handlers
 from utils.logger import setup_logging
@@ -29,6 +31,16 @@ async def error_handler(update, context):
             logger.error(f"Помилка при обробці оновлення: {context.error}")
     except Exception as e:
         logger.error(f"Помилка в error_handler: {e}")
+
+def run_async(coro):
+    """Запуск асинхронної функції в синхронному контексті"""
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+    
+    return loop.run_until_complete(coro)
 
 def create_bot():
     """Створення та налаштування бота"""
@@ -118,7 +130,8 @@ def health_check():
         # Додаємо додаткову інформацію про бота (тільки якщо він готовий)
         if bot_application and bot_application.bot and bot_status == "initialized":
             try:
-                bot_info = bot_application.bot.get_me()
+                # Викликаємо get_me АСИНХРОННО
+                bot_info = run_async(bot_application.bot.get_me())
                 health_info["bot_details"] = {
                     "id": bot_info.id,
                     "username": bot_info.username,
@@ -183,11 +196,10 @@ def webhook():
         logger.info(f"Webhook отримано: {update_data.get('update_id', 'unknown')}")
         
         # Створюємо Update об'єкт та обробляємо його
-        from telegram import Update
         update = Update.de_json(update_data, bot_application.bot)
         
-        # Обробляємо оновлення
-        bot_application.process_update(update)
+        # Обробляємо оновлення АСИНХРОННО
+        run_async(bot_application.process_update(update))
         
         logger.info(f"Webhook оброблено успішно: {update.update_id}")
         return jsonify({"status": "ok", "update_id": update.update_id})
@@ -210,8 +222,8 @@ def set_webhook():
         
         webhook_url = f"{service_url}/webhook"
         
-        # Встановлюємо веб-хук
-        success = bot_application.bot.set_webhook(url=webhook_url)
+        # Встановлюємо веб-хук АСИНХРОННО
+        success = run_async(bot_application.bot.set_webhook(url=webhook_url))
         
         if success:
             logger.info(f"Webhook встановлено: {webhook_url}")
@@ -233,7 +245,7 @@ def delete_webhook():
         return jsonify({"error": "Bot initialization failed"}), 500
     
     try:
-        success = bot_application.bot.delete_webhook()
+        success = run_async(bot_application.bot.delete_webhook())
         
         if success:
             logger.info("Webhook видалено")
@@ -252,7 +264,8 @@ def bot_info():
         return jsonify({"error": "Bot initialization failed"}), 500
     
     try:
-        bot_info = bot_application.bot.get_me()
+        # Викликаємо get_me АСИНХРОННО
+        bot_info = run_async(bot_application.bot.get_me())
         return jsonify({
             "status": "success",
             "bot_info": {
